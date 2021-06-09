@@ -22,15 +22,20 @@
     "prepublishOnly": "npm run-script clean && npm run-script build"
   },
   "dependencies": {
+    "@types/selectn": "^1.1.0",
+    "deepcopy": "^2.1.0",
     "graphql": "^15.5.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "selectn": "^1.1.2"
   },
   "devDependencies": {
     "@types/graphql": "^14.5.0",
     "@types/jest": "^26.0.23",
     "@types/node": "^15.6.1",
     "@types/node-fetch": "^2.5.10",
+    "gql-query-builder": "^3.5.5",
     "jest": "^27.0.3",
+    "performant-array-to-tree": "^1.9.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.0.2",
     "ts-node": "^10.0.0",

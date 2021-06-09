@@ -1,0 +1,13 @@
+.DS_Store
+.vscode
+
+yarn-error.log
+*.tsbuildinfo
+
+.parcel-cache
+.cache
+node_modules
+dist
+dist.zip
+
+.credential

@@ -1,14 +1,8 @@
 import { GraphQLObjectType, GraphQLOutputType, GraphQLSchema } from "graphql";
-import { Traversing } from "./handler";
 import { createSchemaNode, getType, SchemaNode } from "./node";
 
 export type SchemaTree = {
   [key: string]: SchemaNode;
-};
-
-export type Appeared = {
-  traversing: Traversing;
-  includeSameType: boolean;
 };
 
 export type SchemaTreeOption = {

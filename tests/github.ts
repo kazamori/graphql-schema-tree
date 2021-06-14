@@ -24,6 +24,41 @@ beforeAll((done) => {
 /*
  * success
  */
+test("get field names", async () => {
+  const fieldNames = tree.getFieldNames();
+  expect(fieldNames).toEqual([
+    "codeOfConduct",
+    "codesOfConduct",
+    "enterprise",
+    "enterpriseAdministratorInvitation",
+    "enterpriseAdministratorInvitationByToken",
+    "license",
+    "licenses",
+    "marketplaceCategories",
+    "marketplaceCategory",
+    "marketplaceListing",
+    "marketplaceListings",
+    "meta",
+    "node",
+    "nodes",
+    "organization",
+    "rateLimit",
+    "relay",
+    "repository",
+    "repositoryOwner",
+    "resource",
+    "search",
+    "securityAdvisories",
+    "securityAdvisory",
+    "securityVulnerabilities",
+    "sponsorables",
+    "sponsorsListing",
+    "topic",
+    "user",
+    "viewer",
+  ]);
+});
+
 test("property access in the hierarchy", async () => {
   const user = tree.getNode("query.user", true) as any;
   expect(user).not.toBeNull();

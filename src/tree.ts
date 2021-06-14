@@ -16,11 +16,6 @@ export type SchemaTreeOption = {
   typeName?: string;
 };
 
-const defaultSchemaTreeOption: SchemaTreeOption = {
-  typeName: "Query",
-  maxDepth: 5,
-};
-
 /*
  GraphQL reserves fields named with two underscores (e.g. __Type)
  to preserve the namespace for introspection features.
@@ -56,9 +51,8 @@ function buildTree(tree: SchemaNode, depth: number, option: SchemaTreeOption) {
 
 export function buildSchemaTree(
   schema: GraphQLSchema,
-  _option: SchemaTreeOption = defaultSchemaTreeOption
+  option: SchemaTreeOption
 ): SchemaTree {
-  const option = { ...defaultSchemaTreeOption, ..._option };
   const rootName = option.typeName!.toLowerCase();
   const type = schema.getType(option.typeName!);
   if (type == null) {

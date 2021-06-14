@@ -9,7 +9,7 @@ import { isInternalField } from "./tree";
 
 export type Traversing = "depthFirst" | "breadthFirst";
 
-function traverse(
+export function traverse(
   node: SchemaNode,
   traversing: Traversing,
   callback: (info: SchemaNodeInfo, node: SchemaNode) => void

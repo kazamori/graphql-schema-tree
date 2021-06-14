@@ -10,6 +10,7 @@ import {
 export type SchemaNodeInfo = {
   name: string;
   parentName: string;
+  parentPath: string;
   path: string;
   args: ArgumentInfo[];
   type: TypeInfo;
@@ -79,6 +80,7 @@ export function createSchemaNode(
     __info: {
       name: name,
       parentName: parentPath.split(".").pop() ?? "",
+      parentPath: parentPath,
       path: `${parentPath}.${name}`,
       args: field.args.map((arg) => getArgument(arg)),
       type: getType(field.type),

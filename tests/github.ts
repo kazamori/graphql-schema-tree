@@ -79,6 +79,7 @@ test("property details", async () => {
 
   expect(info.name).toEqual("nodes");
   expect(info.parentName).toEqual("followers");
+  expect(info.parentPath).toEqual("query.user.followers");
   expect(info.path).toEqual("query.user.followers.nodes");
   expect(info.args).toEqual([]);
   expect(info.isMaxDepth).toEqual(false);

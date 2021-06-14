@@ -63,9 +63,10 @@ export function buildSchemaTree(
     [rootName]: {
       __info: {
         name: option.typeName!.toLocaleLowerCase(),
+        parentName: "",
+        parentPath: "",
         path: rootName,
         args: [],
-        parentName: "",
         type: getType(type as GraphQLOutputType),
         children: [],
         isMaxDepth: false,

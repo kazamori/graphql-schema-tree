@@ -166,6 +166,37 @@ test("property details", async () => {
   expect(info.type.isAppeared).toEqual(false);
 });
 
+test("get a node as root", async () => {
+  const query = tree.getNode("query.user.followers")!;
+  // normal path structure
+  expect(query.__info.path).toEqual("query.user.followers");
+
+  const followers = tree.getNodeAsRoot("query.user.followers")!;
+  // root
+  expect(followers.__info.name).toEqual("followers");
+  expect(followers.__info.parentName).toEqual("");
+  expect(followers.__info.parentPath).toEqual("");
+  expect(followers.__info.path).toEqual("followers");
+  // sub node under root
+  const nodes = followers.nodes as any;
+  expect(nodes.__info.name).toEqual("nodes");
+  expect(nodes.__info.parentName).toEqual("followers");
+  expect(nodes.__info.parentPath).toEqual("followers");
+  expect(nodes.__info.path).toEqual("followers.nodes");
+  // sub node under sub node
+  const status = nodes.status as any;
+  expect(status.__info.name).toEqual("status");
+  expect(status.__info.parentName).toEqual("nodes");
+  expect(status.__info.parentPath).toEqual("followers.nodes");
+  expect(status.__info.path).toEqual("followers.nodes.status");
+
+  // don't affect the path structure by calling getNodeAsRoot()
+  expect(query.__info.path).toEqual("query.user.followers");
+  expect((query as any).nodes.status.__info.path).toEqual(
+    "query.user.followers.nodes.status"
+  );
+});
+
 test("reached max depth", async () => {
   // depth is 3
   const nodes = tree.getNode("query.user.followers.nodes", true);

@@ -1,6 +1,7 @@
 import deepcopy from "deepcopy";
 import { GraphQLSchema } from "graphql";
 import selectn from "selectn";
+import { traverse } from "./handler";
 import { SchemaNode } from "./node";
 import { buildSchemaTree, SchemaTree, SchemaTreeOption } from "./tree";
 
@@ -29,6 +30,27 @@ export class GraphQLSchemaTree {
       return null;
     }
     return isCopy ? deepcopy(node) : node;
+  }
+
+  getNodeAsRoot(path: string): SchemaNode | null {
+    const node = selectn(path, this.tree) as SchemaNode | undefined;
+    if (node === undefined) {
+      return null;
+    }
+
+    const copied = deepcopy(node);
+    copied.__info.parentName = "";
+    copied.__info.parentPath = "";
+    copied.__info.path = copied.__info.name;
+
+    const depth = (path.match(/\./g) || []).length;
+    const parent = new RegExp(path.split(".", depth).join(".") + ".");
+    traverse(copied, "depthFirst", (_, node) => {
+      const info = node.__info;
+      info.path = info.path.replace(parent, "");
+      info.parentPath = info.parentPath.replace(parent, "");
+    });
+    return copied;
   }
 
   getFieldNames(): string[] {

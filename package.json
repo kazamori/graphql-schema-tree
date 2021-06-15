@@ -2,7 +2,8 @@
   "name": "graphql-schema-tree",
   "version": "0.0.1",
   "description": "Utility/Helper functions with GraphQL schema object for a tree structure",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/kazamori/graphql-schema-tree.git"

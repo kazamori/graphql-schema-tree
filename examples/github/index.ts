@@ -1,6 +1,8 @@
+import { GraphQLObjectType } from "graphql";
 import { GraphQLSchemaTree } from "graphqlSchemaTree";
 import { SchemaNodeHandler } from "handler";
 import path from "path";
+import { arrayToTree } from "performant-array-to-tree";
 import { getSchema } from "../../src/util";
 
 export async function main() {
@@ -49,6 +51,30 @@ export async function main() {
     "=== validate 'login' argument wiht a value:\n",
     handler.validateArgument("login", 333)
   );
+
+  // traverse nodes and convert own data structure
+  const userAsRoot = tree.getNodeAsRoot("query.user")!;
+  const handlerAsRoot = new SchemaNodeHandler(userAsRoot);
+  const ourArray: Array<{ [key: string]: any }> = [];
+  handlerAsRoot.traverseNode(
+    (node) => {
+      const info = node.__info;
+      const item = {
+        id: info.path,
+        title: info.name,
+        parentId: info.parentPath,
+        isObject: info.type.graphQLType instanceof GraphQLObjectType,
+      };
+      ourArray.push(item);
+    },
+    {
+      traversing: "breadthFirst",
+    }
+  );
+  console.log("=== converted own data:\n", ourArray.length);
+  // to tree by arrayToTree
+  const converted = arrayToTree(ourArray, { dataField: null });
+  console.log("=== converted tree:\n", converted);
 }
 
 if (require.main === module) {

@@ -301,9 +301,12 @@ test("traverse node", async () => {
   const query = tree.getNode("query.user", true)!;
   const handler = new SchemaNodeHandler(query);
   const traces: string[] = [];
-  handler.traverseNode("breadthFirst", (node) => {
-    traces.push(node.__info.path);
-  });
+  handler.traverseNode(
+    (node) => {
+      traces.push(node.__info.path);
+    },
+    { traversing: "breadthFirst" }
+  );
   expect(traces.length).toEqual(2935);
   expect(traces[0]).toEqual("query.user");
   expect(traces[255]).toEqual(
@@ -318,15 +321,64 @@ test("traverse node as root", async () => {
   const user = tree.getNodeAsRoot("query.user")!;
   const handler = new SchemaNodeHandler(user);
   const traces: string[] = [];
-  handler.traverseNode("breadthFirst", (node) => {
-    traces.push(node.__info.path);
-  });
+  handler.traverseNode(
+    (node) => {
+      traces.push(node.__info.path);
+    },
+    { traversing: "breadthFirst" }
+  );
   expect(traces.length).toEqual(2935);
   expect(traces[0]).toEqual("user");
   expect(traces[255]).toEqual(
     "user.contributionsCollection.popularPullRequestContribution.isRestricted"
   );
   expect(traces[1024]).toEqual("user.organization.team.viewerCanSubscribe");
+});
+
+test("traverse node excluding hidden paths", async () => {
+  const query = tree.getNode("query.user", true)!;
+  const handler = new SchemaNodeHandler(query);
+  const traces: string[] = [];
+  const hiddenPaths = [
+    "query.user.contributionsCollection.popularPullRequestContribution.isRestricted",
+    "query.user.organization.team.viewerCanSubscribe",
+  ];
+  handler.traverseNode(
+    (node) => {
+      traces.push(node.__info.path);
+    },
+    { traversing: "breadthFirst", hiddenPaths }
+  );
+  expect(traces.length).toEqual(2933);
+  expect(traces[0]).toEqual("query.user");
+  for (const path of hiddenPaths) {
+    expect(traces.includes(path)).toBeFalsy();
+  }
+});
+
+test("traverse node excluding hidden regular expressions", async () => {
+  const query = tree.getNode("query.user", true)!;
+  const handler = new SchemaNodeHandler(query);
+  const traces: string[] = [];
+  const hiddenExpressions = [
+    new RegExp(
+      "query.user.contributionsCollection.popularPullRequestContribution.*"
+    ),
+    new RegExp("query.user.organization.*"),
+  ];
+  handler.traverseNode(
+    (node) => {
+      traces.push(node.__info.path);
+    },
+    { traversing: "breadthFirst", hiddenExpressions }
+  );
+  expect(traces.length).toEqual(2544);
+  expect(traces[0]).toEqual("query.user");
+  for (const exp of hiddenExpressions) {
+    for (const path of traces) {
+      expect(path.match(exp)).toBeNull();
+    }
+  }
 });
 
 test("handling fields", async () => {

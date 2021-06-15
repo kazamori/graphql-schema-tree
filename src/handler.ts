@@ -9,6 +9,18 @@ import { isInternalField } from "./tree";
 
 export type Traversing = "depthFirst" | "breadthFirst";
 
+export type TraverseOption = {
+  traversing: Traversing;
+  hiddenPaths?: string[];
+  hiddenExpressions?: RegExp[];
+};
+
+const defaultTraverseOption: TraverseOption = {
+  traversing: "depthFirst",
+  hiddenPaths: [],
+  hiddenExpressions: [],
+};
+
 export function traverse(
   node: SchemaNode,
   traversing: Traversing,
@@ -115,10 +127,30 @@ export class SchemaNodeHandler {
     return this;
   }
 
-  traverseNode(traversing: Traversing, callback: (node: SchemaNode) => void) {
-    callback(this.node);
-    traverse(this.node, traversing, (_, node) => {
-      callback(node);
+  isHiddenNode(node: SchemaNode, option: TraverseOption) {
+    const path = node.__info.path;
+    if (option.hiddenExpressions !== undefined) {
+      for (const exp of option.hiddenExpressions) {
+        if (path.match(exp) !== null) {
+          return true;
+        }
+      }
+    }
+    if (option.hiddenPaths?.includes(path)) {
+      return true;
+    }
+    return false;
+  }
+
+  traverseNode(callback: (node: SchemaNode) => void, _option?: TraverseOption) {
+    const option = { ...defaultTraverseOption, ..._option };
+    if (!this.isHiddenNode(this.node, option)) {
+      callback(this.node);
+    }
+    traverse(this.node, option.traversing, (_, node) => {
+      if (!this.isHiddenNode(node, option)) {
+        callback(node);
+      }
     });
   }
 }

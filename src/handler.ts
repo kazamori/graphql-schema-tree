@@ -114,4 +114,11 @@ export class SchemaNodeHandler {
     });
     return this;
   }
+
+  traverseNode(traversing: Traversing, callback: (node: SchemaNode) => void) {
+    callback(this.node);
+    traverse(this.node, traversing, (_, node) => {
+      callback(node);
+    });
+  }
 }

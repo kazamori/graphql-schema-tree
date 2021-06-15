@@ -291,6 +291,38 @@ test("handling tree/node with call by reference", async () => {
   ).toBeTruthy();
 });
 
+test("traverse node", async () => {
+  const query = tree.getNode("query.user", true)!;
+  const handler = new SchemaNodeHandler(query);
+  const traces: string[] = [];
+  handler.traverseNode("breadthFirst", (node) => {
+    traces.push(node.__info.path);
+  });
+  expect(traces.length).toEqual(2935);
+  expect(traces[0]).toEqual("query.user");
+  expect(traces[255]).toEqual(
+    "query.user.contributionsCollection.popularPullRequestContribution.isRestricted"
+  );
+  expect(traces[1024]).toEqual(
+    "query.user.organization.team.viewerCanSubscribe"
+  );
+});
+
+test("traverse node as root", async () => {
+  const user = tree.getNodeAsRoot("query.user")!;
+  const handler = new SchemaNodeHandler(user);
+  const traces: string[] = [];
+  handler.traverseNode("breadthFirst", (node) => {
+    traces.push(node.__info.path);
+  });
+  expect(traces.length).toEqual(2935);
+  expect(traces[0]).toEqual("user");
+  expect(traces[255]).toEqual(
+    "user.contributionsCollection.popularPullRequestContribution.isRestricted"
+  );
+  expect(traces[1024]).toEqual("user.organization.team.viewerCanSubscribe");
+});
+
 test("handling fields", async () => {
   const user = tree.getNode("query.user", true) as any;
   const handler = new SchemaNodeHandler(user);

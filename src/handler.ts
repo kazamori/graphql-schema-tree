@@ -11,14 +11,12 @@ export type Traversing = "depthFirst" | "breadthFirst";
 
 export type TraverseOption = {
   traversing: Traversing;
-  hiddenPaths?: string[];
-  hiddenExpressions?: RegExp[];
+  hiddenPaths?: (string | RegExp)[];
 };
 
 const defaultTraverseOption: TraverseOption = {
   traversing: "depthFirst",
   hiddenPaths: [],
-  hiddenExpressions: [],
 };
 
 export function traverse(
@@ -129,15 +127,18 @@ export class SchemaNodeHandler {
 
   isHiddenNode(node: SchemaNode, option: TraverseOption) {
     const path = node.__info.path;
-    if (option.hiddenExpressions !== undefined) {
-      for (const exp of option.hiddenExpressions) {
-        if (path.match(exp) !== null) {
-          return true;
+    if (option.hiddenPaths !== undefined) {
+      for (const hiddenPath of option.hiddenPaths) {
+        if (typeof hiddenPath === "string") {
+          if (path === hiddenPath) {
+            return true;
+          }
+        } else {
+          if (path.match(hiddenPath) !== null) {
+            return true;
+          }
         }
       }
-    }
-    if (option.hiddenPaths?.includes(path)) {
-      return true;
     }
     return false;
   }

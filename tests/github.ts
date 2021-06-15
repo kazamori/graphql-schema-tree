@@ -360,7 +360,7 @@ test("traverse node excluding hidden regular expressions", async () => {
   const query = tree.getNode("query.user", true)!;
   const handler = new SchemaNodeHandler(query);
   const traces: string[] = [];
-  const hiddenExpressions = [
+  const hiddenPaths = [
     new RegExp(
       "query.user.contributionsCollection.popularPullRequestContribution.*"
     ),
@@ -370,11 +370,11 @@ test("traverse node excluding hidden regular expressions", async () => {
     (node) => {
       traces.push(node.__info.path);
     },
-    { traversing: "breadthFirst", hiddenExpressions }
+    { traversing: "breadthFirst", hiddenPaths }
   );
   expect(traces.length).toEqual(2544);
   expect(traces[0]).toEqual("query.user");
-  for (const exp of hiddenExpressions) {
+  for (const exp of hiddenPaths) {
     for (const path of traces) {
       expect(path.match(exp)).toBeNull();
     }

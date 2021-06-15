@@ -15,6 +15,7 @@ export type SchemaNodeInfo = {
   args: ArgumentInfo[];
   type: TypeInfo;
   children: string[];
+  depth: number;
   isMaxDepth: boolean;
 };
 
@@ -74,17 +75,19 @@ function getArgument(arg: GraphQLArgument): ArgumentInfo {
 export function createSchemaNode(
   name: string,
   parentPath: string,
-  field: GraphQLField<any, any>
+  field: GraphQLField<any, any>,
+  depth: number
 ): SchemaNode {
   return {
     __info: {
-      name: name,
+      name,
       parentName: parentPath.split(".").pop() ?? "",
-      parentPath: parentPath,
+      parentPath,
       path: `${parentPath}.${name}`,
       args: field.args.map((arg) => getArgument(arg)),
       type: getType(field.type),
       children: [],
+      depth,
       isMaxDepth: false,
     },
   };

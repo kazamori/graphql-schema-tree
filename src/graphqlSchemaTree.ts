@@ -38,17 +38,19 @@ export class GraphQLSchemaTree {
       return null;
     }
 
+    const depth = (path.match(/\./g) || []).length;
     const copied = deepcopy(node);
     copied.__info.parentName = "";
     copied.__info.parentPath = "";
     copied.__info.path = copied.__info.name;
+    copied.__info.depth = copied.__info.depth - depth;
 
-    const depth = (path.match(/\./g) || []).length;
     const parent = new RegExp(path.split(".", depth).join(".") + ".");
     traverse(copied, "depthFirst", (_, node) => {
       const info = node.__info;
       info.path = info.path.replace(parent, "");
       info.parentPath = info.parentPath.replace(parent, "");
+      info.depth = info.depth - depth;
     });
     return copied;
   }

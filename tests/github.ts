@@ -82,6 +82,7 @@ test("property details", async () => {
   expect(info.parentPath).toEqual("query.user.followers");
   expect(info.path).toEqual("query.user.followers.nodes");
   expect(info.args).toEqual([]);
+  expect(info.depth).toEqual(3);
   expect(info.isMaxDepth).toEqual(false);
   expect(info.children).toEqual([
     "anyPinnableItems",
@@ -170,6 +171,7 @@ test("get a node as root", async () => {
   const query = tree.getNode("query.user.followers")!;
   // normal path structure
   expect(query.__info.path).toEqual("query.user.followers");
+  expect(query.__info.depth).toEqual(2);
 
   const followers = tree.getNodeAsRoot("query.user.followers")!;
   // root
@@ -177,24 +179,28 @@ test("get a node as root", async () => {
   expect(followers.__info.parentName).toEqual("");
   expect(followers.__info.parentPath).toEqual("");
   expect(followers.__info.path).toEqual("followers");
+  expect(followers.__info.depth).toEqual(0);
   // sub node under root
   const nodes = followers.nodes as any;
   expect(nodes.__info.name).toEqual("nodes");
   expect(nodes.__info.parentName).toEqual("followers");
   expect(nodes.__info.parentPath).toEqual("followers");
   expect(nodes.__info.path).toEqual("followers.nodes");
+  expect(nodes.__info.depth).toEqual(1);
   // sub node under sub node
   const status = nodes.status as any;
   expect(status.__info.name).toEqual("status");
   expect(status.__info.parentName).toEqual("nodes");
   expect(status.__info.parentPath).toEqual("followers.nodes");
   expect(status.__info.path).toEqual("followers.nodes.status");
+  expect(status.__info.depth).toEqual(2);
 
   // don't affect the path structure by calling getNodeAsRoot()
   expect(query.__info.path).toEqual("query.user.followers");
   expect((query as any).nodes.status.__info.path).toEqual(
     "query.user.followers.nodes.status"
   );
+  expect((query as any).nodes.status.__info.depth).toEqual(4);
 });
 
 test("reached max depth", async () => {

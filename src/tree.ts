@@ -29,7 +29,7 @@ function buildTree(tree: SchemaNode, depth: number, option: SchemaTreeOption) {
     if (isInternalField(key)) {
       return;
     }
-    const node = createSchemaNode(key, tree.__info.path, field);
+    const node = createSchemaNode(key, tree.__info.path, field, depth);
     tree.__info.children.push(key);
     tree[key] = node;
     if (node.__info.type.graphQLType instanceof GraphQLObjectType) {
@@ -63,6 +63,7 @@ export function buildSchemaTree(
         args: [],
         type: getType(type as GraphQLOutputType),
         children: [],
+        depth: 0,
         isMaxDepth: false,
       },
     },
@@ -73,7 +74,7 @@ export function buildSchemaTree(
     if (isInternalField(key)) {
       return;
     }
-    const node = createSchemaNode(key, rootName, field);
+    const node = createSchemaNode(key, rootName, field, 1);
     tree[rootName].__info.children.push(key);
     tree[rootName][key] = node;
     if (node.__info.type.graphQLType instanceof GraphQLObjectType) {

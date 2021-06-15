@@ -252,6 +252,25 @@ test("get a node from a handler", async () => {
   expect(followers.__info.path).toEqual("user.followers");
 });
 
+test("check a same type in the hierarchy", async () => {
+  const user = tree.getNodeAsRoot("query.user") as any;
+  const handler = new SchemaNodeHandler(user);
+  const nodes = handler.getNode("user.followers.nodes")!;
+  expect(
+    handler.hasSameTypeInHierarchy(
+      nodes.__info.type.graphQLType,
+      nodes.__info.parentPath
+    )
+  ).toBeTruthy();
+  const status = nodes.status as any;
+  expect(
+    handler.hasSameTypeInHierarchy(
+      status.__info.type.graphQLType,
+      status.__info.parentPath
+    )
+  ).toBeFalsy();
+});
+
 test("appear a same type with breadthFirst traversing", async () => {
   const user = tree.getNode("query.user", true) as any;
   const handler = new SchemaNodeHandler(user);

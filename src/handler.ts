@@ -2,6 +2,7 @@ import {
   coerceInputValue,
   GraphQLInputObjectType,
   GraphQLInputType,
+  GraphQLNamedType,
   GraphQLObjectType,
 } from "graphql";
 import selectn from "selectn";
@@ -69,6 +70,17 @@ export class SchemaNodeHandler {
     const tree: SchemaTree = { [root]: this.node };
     const node = selectn(path, tree) as SchemaNode | undefined;
     return node === undefined ? null : node;
+  }
+
+  hasSameTypeInHierarchy(type: GraphQLNamedType, parentPath: string): boolean {
+    const parent = this.getNode(parentPath);
+    if (parent == null) {
+      return false;
+    }
+    if (parent.__info.type.graphQLType === type) {
+      return true;
+    }
+    return this.hasSameTypeInHierarchy(type, parent.__info.parentName);
   }
 
   getArgumentNames() {

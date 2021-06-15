@@ -1,6 +1,6 @@
 {
   "name": "graphql-schema-tree",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Utility/Helper functions with GraphQL schema object for a tree structure",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,6 +22,11 @@
     "test": "jest",
     "prepublishOnly": "npm run-script clean && npm run-script build"
   },
+  "keywords": [
+    "graphql",
+    "schema",
+    "tree"
+  ],
   "dependencies": {
     "deepcopy": "^2.1.0",
     "graphql": "^15.5.0",

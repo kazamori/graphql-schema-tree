@@ -1,0 +1,15 @@
+.editorConfig
+.nvmrc
+.github/
+.vscode/
+
+yarn-error.log
+node_modules/
+coverage/
+
+examples/
+src/
+tests/
+
+jest.config.*
+tsconfig.*

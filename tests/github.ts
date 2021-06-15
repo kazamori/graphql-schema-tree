@@ -3,6 +3,7 @@ import path from "path";
 import { GraphQLSchemaTree } from "../src/graphqlSchemaTree";
 import { SchemaNodeHandler } from "../src/handler";
 import { SchemaNode, SchemaNodeInfo } from "../src/node";
+import { getParent } from "../src/tree";
 import { getSchema } from "../src/util";
 
 const schemaPath = path.resolve(__dirname, "../examples/github/schema.graphql");
@@ -21,9 +22,6 @@ beforeAll((done) => {
   before();
 });
 
-/*
- * success
- */
 test("get field names", async () => {
   const fieldNames = tree.getFieldNames();
   expect(fieldNames).toEqual([
@@ -59,7 +57,7 @@ test("get field names", async () => {
   ]);
 });
 
-test("property access in the hierarchy", async () => {
+test("access properties in the hierarchy", async () => {
   const user = tree.getNode("query.user", true) as any;
   expect(user).not.toBeNull();
   expect(user.__info).not.toBeNull();
@@ -73,10 +71,25 @@ test("property access in the hierarchy", async () => {
   expect(user.unexistent).toBeUndefined();
 });
 
-test("property details", async () => {
-  const nodes = tree.getNode("query.user.followers.nodes", true);
-  const info = nodes!.__info;
+test("get parent from a node", async () => {
+  const nodes = tree.getNode("query.user.followers.nodes")!;
+  const parent = getParent(tree.tree, nodes)!;
+  expect(parent.__info.name).toEqual("followers");
+  expect(parent.__info.path).toEqual("query.user.followers");
+});
 
+test("get parent with prefix from a node", async () => {
+  const nodes = tree.getNodeAsRoot("query.user.followers.nodes")!;
+  const noParent = getParent(tree.tree, nodes);
+  expect(noParent).toBeNull();
+  const parent = getParent(tree.tree, nodes, "query.user.followers.")!;
+  expect(parent.__info.name).toEqual("followers");
+  expect(parent.__info.path).toEqual("query.user.followers");
+});
+
+test("verify property details", async () => {
+  const nodes = tree.getNode("query.user.followers.nodes", true)!;
+  const info = nodes.__info;
   expect(info.name).toEqual("nodes");
   expect(info.parentName).toEqual("followers");
   expect(info.parentPath).toEqual("query.user.followers");
@@ -203,7 +216,7 @@ test("get a node as root", async () => {
   expect((query as any).nodes.status.__info.depth).toEqual(4);
 });
 
-test("reached max depth", async () => {
+test("reach max depth", async () => {
   // depth is 3
   const nodes = tree.getNode("query.user.followers.nodes", true);
   Object.values(nodes!).map((value: any) => {
@@ -228,7 +241,18 @@ test("reached max depth", async () => {
   expect(organization).toBeNull();
 });
 
-test("a same type is appeared with breadthFirst traversing", async () => {
+test("get a node from a handler", async () => {
+  const user = tree.getNodeAsRoot("query.user") as any;
+  const handler = new SchemaNodeHandler(user);
+  const nodes = handler.getNode("user.followers.nodes")!;
+  expect(nodes.__info.name).toEqual("nodes");
+  expect(nodes.__info.parentPath).toEqual("user.followers");
+  const followers = handler.getNode(nodes.__info.parentPath)!;
+  expect(followers.__info.name).toEqual("followers");
+  expect(followers.__info.path).toEqual("user.followers");
+});
+
+test("appear a same type with breadthFirst traversing", async () => {
   const user = tree.getNode("query.user", true) as any;
   const handler = new SchemaNodeHandler(user);
 
@@ -247,7 +271,7 @@ test("a same type is appeared with breadthFirst traversing", async () => {
   expect(user.followers.nodes.status.__info.type.isAppeared).toBeTruthy();
 });
 
-test("a same type is appeared with depthFirst traversing", async () => {
+test("appear a same type with depthFirst traversing", async () => {
   const user = tree.getNode("query.user", true) as any;
   const handler = new SchemaNodeHandler(user);
 
@@ -266,7 +290,7 @@ test("a same type is appeared with depthFirst traversing", async () => {
   expect(user.followers.nodes.status.__info.type.isAppeared).toBeTruthy();
 });
 
-test("handling tree/node with call by reference", async () => {
+test("handle tree/node with call by reference", async () => {
   const globalTree = tree;
   const localTree = new GraphQLSchemaTree(schema, {
     typeName: "Query",
@@ -381,7 +405,7 @@ test("traverse node excluding hidden regular expressions", async () => {
   }
 });
 
-test("handling fields", async () => {
+test("handle fields", async () => {
   const user = tree.getNode("query.user", true) as any;
   const handler = new SchemaNodeHandler(user);
   const fields = handler.getFields();
@@ -391,7 +415,7 @@ test("handling fields", async () => {
   expect(fields[10].__info.name).toEqual(fieldNames[10]);
 });
 
-test("handling arguments", async () => {
+test("handle arguments", async () => {
   const user = tree.getNode("query.user", true) as any;
   const handler1 = new SchemaNodeHandler(user);
   const args = handler1.getArguments();

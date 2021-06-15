@@ -1,4 +1,5 @@
 import { GraphQLObjectType, GraphQLOutputType, GraphQLSchema } from "graphql";
+import selectn from "selectn";
 import { createSchemaNode, getType, SchemaNode } from "./node";
 
 export type SchemaTree = {
@@ -83,4 +84,17 @@ export function buildSchemaTree(
   });
 
   return tree;
+}
+
+export function getParent(
+  tree: SchemaTree,
+  node: SchemaNode,
+  prefix = ""
+): SchemaNode | null {
+  const parentPath = `${prefix}${node.__info.parentPath}`;
+  const parent = selectn(parentPath, tree);
+  if (parent === undefined) {
+    return null;
+  }
+  return parent;
 }

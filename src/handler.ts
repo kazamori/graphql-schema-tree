@@ -4,8 +4,9 @@ import {
   GraphQLInputType,
   GraphQLObjectType,
 } from "graphql";
+import selectn from "selectn";
 import { ArgumentInfo, SchemaNode, SchemaNodeInfo } from "./node";
-import { isInternalField } from "./tree";
+import { isInternalField, SchemaTree } from "./tree";
 
 export type Traversing = "depthFirst" | "breadthFirst";
 
@@ -58,6 +59,16 @@ export class SchemaNodeHandler {
   readonly node: SchemaNode;
   constructor(node: SchemaNode) {
     this.node = node;
+  }
+
+  getNode(path: string): SchemaNode | null {
+    const root = path.split(".", 1)[0];
+    if (root === "") {
+      return null;
+    }
+    const tree: SchemaTree = { [root]: this.node };
+    const node = selectn(path, tree) as SchemaNode | undefined;
+    return node === undefined ? null : node;
   }
 
   getArgumentNames() {

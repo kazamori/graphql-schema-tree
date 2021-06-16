@@ -83,9 +83,5 @@ export function convertDotNotationToFieldType(
       }
     });
   };
-
-  const result = Object.entries(obj).map(([key, value]) => {
-    return { [key]: search(value) };
-  });
-  return result;
+  return search(obj);
 }

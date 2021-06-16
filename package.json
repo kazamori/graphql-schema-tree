@@ -1,6 +1,6 @@
 {
   "name": "graphql-schema-tree",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "description": "Utility/Helper functions with GraphQL schema object for a tree structure",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

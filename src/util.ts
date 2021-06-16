@@ -56,3 +56,36 @@ export async function getSchema(option: SchemaOption): Promise<GraphQLSchema> {
   const contents = fs.readFileSync(path, { encoding, flag: "r" });
   return buildSchema(contents, { assumeValid: true });
 }
+
+export type FieldType = (string | { [key: string]: FieldType })[];
+
+export function convertDotNotationToFieldType(
+  dotNotationProperties: string[]
+): FieldType {
+  type FieldObject = { [key: string]: FieldObject };
+  const obj: FieldObject = {};
+  for (const prop of dotNotationProperties) {
+    let tmpObj = obj;
+    for (const token of prop.split(".")) {
+      if (tmpObj[token] === undefined) {
+        tmpObj[token] = {};
+      }
+      tmpObj = tmpObj[token];
+    }
+  }
+
+  const search = (data: FieldObject): FieldType => {
+    return Object.entries(data).map(([key, value]) => {
+      if (Object.keys(value as any).length === 0) {
+        return key;
+      } else {
+        return { [key]: search(value) };
+      }
+    });
+  };
+
+  const result = Object.entries(obj).map(([key, value]) => {
+    return { [key]: search(value) };
+  });
+  return result;
+}

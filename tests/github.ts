@@ -442,19 +442,40 @@ test("handle arguments", async () => {
   expect(args.length).toEqual(argNames.length);
   expect(args[0].name).toEqual(argNames[0]);
 
+  // case: 1
   // validation success
   expect(handler1.validateArgument("login", "t2y")).toBeNull();
+  expect(handler1.convertArgumentValue("login", "t2y")).toEqual("t2y");
   // validation error
   expect(handler1.validateArgument("login", 333)).not.toBeNull();
   expect(handler1.validateArgument("login", true)).not.toBeNull();
   expect(handler1.validateArgument("login", { a: 1 })).not.toBeNull();
 
+  // case: 2
   const issues = tree.getNode("query.user.issues", true) as any;
   const handler2 = new SchemaNodeHandler(issues);
   // validation success
   expect(handler2.validateArgument("filterBy", {})).toBeNull();
   expect(handler2.validateArgument("filterBy", { labels: ["bug"] })).toBeNull();
+  const filterByValue = handler2.convertArgumentValue(
+    "filterBy",
+    '{ labels: ["bug"] }'
+  );
+  expect(filterByValue).toEqual({ labels: ["bug"], viewerSubscribed: false });
   // validation error
   expect(handler2.validateArgument("filterBy", "text")).not.toBeNull();
   expect(handler2.validateArgument("filterBy", 11)).not.toBeNull();
+
+  // case: 3
+  const repositories = tree.getNode("query.user.repositories", true) as any;
+  const handler3 = new SchemaNodeHandler(repositories);
+  // convert a value
+  expect(handler3.convertArgumentValue("isFork", "true")).toBeTruthy();
+  expect(handler3.convertArgumentValue("isLocked", "false")).toBeFalsy();
+
+  // case: 4
+  const followers = tree.getNode("query.viewer.followers", true) as any;
+  const handler4 = new SchemaNodeHandler(followers);
+  // convert a value
+  expect(handler4.convertArgumentValue("first", "10")).toEqual(10);
 });

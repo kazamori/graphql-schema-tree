@@ -4,6 +4,8 @@ import {
   GraphQLInputType,
   GraphQLNamedType,
   GraphQLObjectType,
+  parseValue,
+  valueFromAST,
 } from "graphql";
 import selectn from "selectn";
 import { ArgumentInfo, SchemaNode, SchemaNodeInfo } from "./node";
@@ -122,6 +124,19 @@ export class SchemaNodeHandler {
     }
     const type = arg.type.graphQLType as GraphQLInputType;
     return this.validateValue(value, type);
+  }
+
+  convertArgumentValue(name: string, value: string) {
+    const arg = this.getArgument(name);
+    if (arg === null) {
+      return null;
+    }
+    const type = arg.type.graphQLType;
+    if (type.name === "String") {
+      return value;
+    }
+    const valueNode = parseValue(value, { noLocation: true });
+    return valueFromAST(valueNode, type as GraphQLInputType);
   }
 
   getFieldNames() {

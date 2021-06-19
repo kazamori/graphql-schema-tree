@@ -75,6 +75,7 @@ export class SchemaNodeHandler {
   }
 
   hasSameTypeInHierarchy(type: GraphQLNamedType, parentPath: string): boolean {
+    // NOTE: only works with GraphQLSchemaTree.getNodeAsRoot
     const parent = this.getNode(parentPath);
     if (parent == null) {
       return false;
@@ -82,7 +83,7 @@ export class SchemaNodeHandler {
     if (parent.__info.type.graphQLType === type) {
       return true;
     }
-    return this.hasSameTypeInHierarchy(type, parent.__info.parentName);
+    return this.hasSameTypeInHierarchy(type, parent.__info.parentPath);
   }
 
   getArgumentNames() {

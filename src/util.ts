@@ -62,26 +62,30 @@ export type FieldType = (string | { [key: string]: FieldType })[];
 export function convertDotNotationToFieldType(
   dotNotationProperties: string[]
 ): FieldType {
-  type FieldObject = { [key: string]: FieldObject };
-  const obj: FieldObject = {};
-  for (const prop of dotNotationProperties) {
-    let tmpObj = obj;
-    for (const token of prop.split(".")) {
-      if (tmpObj[token] === undefined) {
-        tmpObj[token] = {};
+  const extract = (fieldType: FieldType, tokens: string[]): void => {
+    const [key, ...others] = tokens;
+    if (tokens.length === 1) {
+      fieldType.push(key);
+    } else {
+      let found = false;
+      for (const item of fieldType) {
+        if (typeof item === "object") {
+          if (item[key] !== undefined) {
+            found = true;
+            extract(item[key], others);
+          }
+        }
       }
-      tmpObj = tmpObj[token];
+      if (!found) {
+        fieldType.push({ [key]: [] });
+        extract(fieldType, tokens);
+      }
     }
-  }
-
-  const search = (data: FieldObject): FieldType => {
-    return Object.entries(data).map(([key, value]) => {
-      if (Object.keys(value as any).length === 0) {
-        return key;
-      } else {
-        return { [key]: search(value) };
-      }
-    });
   };
-  return search(obj);
+
+  const fieldType: FieldType = [];
+  for (const prop of dotNotationProperties) {
+    extract(fieldType, prop.split("."));
+  }
+  return fieldType;
 }

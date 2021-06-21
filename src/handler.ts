@@ -29,6 +29,7 @@ const defaultConvertArgumentValueOption: ConvertArgumentValueOption = {
 export type ArgumentValueInfo = {
   value: any | null;
   type: TypeInfo;
+  parentType: TypeInfo | null;
 };
 
 export type Traversing = "depthFirst" | "breadthFirst";
@@ -209,12 +210,19 @@ export class SchemaNodeHandler {
       return null;
     }
 
+    const depth = (name.match(/\./g) || []).length;
+    const parentName = name.split(".", depth).join(".");
+    const parentType =
+      depth === 0
+        ? null
+        : getType(this.getArgumentInputField(parentName)!.type);
     const typeInfo = getType(arg.type);
     const type = typeInfo.graphQLType as GraphQLScalarType;
     if (typeInfo.isList) {
       return {
         value: value.split(",").map((v) => this.convertValue(v.trim(), type)),
         type: typeInfo,
+        parentType: parentType,
       };
     }
 
@@ -223,6 +231,7 @@ export class SchemaNodeHandler {
     return {
       value: this.convertValue(value, scalarType),
       type: typeInfo,
+      parentType: parentType,
     };
   }
 

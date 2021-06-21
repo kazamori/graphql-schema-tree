@@ -251,6 +251,7 @@ test("handler.convertArgumentValue", async () => {
   expect(limitValueInfo.type.isNonNull).toEqual(true);
   expect(limitValueInfo.type.isNonNullList).toEqual(false);
   expect(limitValueInfo.type.isList).toEqual(false);
+  expect(limitValueInfo.parentType).toBeNull();
   expect(handler.convertArgumentValue("limit", "3.14")!.value).toEqual(3);
   expect(handler.convertArgumentValue("limit", "true")!.value).toEqual(NaN);
   expect(handler.convertArgumentValue("limit", "test")!.value).toEqual(NaN);
@@ -261,6 +262,7 @@ test("handler.convertArgumentValue", async () => {
   expect(sortByInfo.type.isNonNull).toEqual(false);
   expect(sortByInfo.type.isNonNullList).toEqual(false);
   expect(sortByInfo.type.isList).toEqual(false);
+  expect(sortByInfo.parentType!.graphQLType.name).toEqual("SortInput");
   expect(handler.convertArgumentValue("sort.by", "createdAt")!.value).toEqual(
     "createdAt"
   );
@@ -274,6 +276,7 @@ test("handler.convertArgumentValue", async () => {
   expect(sortDescInfo.type.isNonNull).toEqual(false);
   expect(sortDescInfo.type.isNonNullList).toEqual(false);
   expect(sortDescInfo.type.isList).toEqual(false);
+  expect(sortDescInfo.parentType!.graphQLType.name).toEqual("SortInput");
   expect(handler.convertArgumentValue("sort.desc", "false")!.value).toEqual(
     false
   );
@@ -286,6 +289,7 @@ test("handler.convertArgumentValue", async () => {
   expect(filterNoInfo.type.isNonNull).toEqual(false);
   expect(filterNoInfo.type.isNonNullList).toEqual(false);
   expect(filterNoInfo.type.isList).toEqual(false);
+  expect(filterNoInfo.parentType!.graphQLType.name).toEqual("FilterInput");
   expect(handler.convertArgumentValue("filter.no", "test")!.value).toEqual(NaN);
   // filter.nums
   const filterNums = handler.convertArgumentValue("filter.nums", "3")!;
@@ -294,6 +298,7 @@ test("handler.convertArgumentValue", async () => {
   expect(filterNums.type.isNonNull).toEqual(true);
   expect(filterNums.type.isNonNullList).toEqual(true);
   expect(filterNums.type.isList).toEqual(true);
+  expect(filterNums.parentType!.graphQLType.name).toEqual("FilterInput");
   expect(
     handler.convertArgumentValue("filter.nums", "3, 11, -5")!.value
   ).toEqual([3, 11, -5]);
@@ -375,6 +380,9 @@ test("handler.convertArgumentValue", async () => {
   expect(filterUserUsernameInfo.type.isNonNull).toEqual(false);
   expect(filterUserUsernameInfo.type.isNonNullList).toEqual(false);
   expect(filterUserUsernameInfo.type.isList).toEqual(false);
+  expect(filterUserUsernameInfo.parentType!.graphQLType.name).toEqual(
+    "UserInput"
+  );
 });
 
 test("handler.getFieldNames", async () => {

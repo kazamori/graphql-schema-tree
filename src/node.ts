@@ -27,16 +27,19 @@ export interface SchemaNode {
   [key: string]: SchemaNodeInfo | SchemaNode;
 }
 
+// FIXME: only handle simple Scalar or List type
 export type TypeInfo = {
   graphQLType: GraphQLNamedType;
   isList: boolean;
   isNonNull: boolean;
+  isNonNullList: boolean;
 };
 
 export function getType<T extends GraphQLType>(
   type: T & { readonly ofType: T },
   isList = false,
   isNonNull = false,
+  isNonNullList = false,
   depth = 0
 ): TypeInfo {
   // FIXME: how to check list/nonnull for a wrapping type
@@ -45,16 +48,23 @@ export function getType<T extends GraphQLType>(
   if (!isList) {
     isList = isListType(type);
   }
-  if (!isNonNull) {
-    isNonNull = isNonNullType(type);
+  if (!(isNonNull && isNonNullList)) {
+    if (isNonNullType(type)) {
+      if (isListType(type.ofType)) {
+        isNonNullList = true;
+      } else {
+        isNonNull = true;
+      }
+    }
   }
   if (type.ofType && depth < 8) {
-    return getType(type.ofType, isList, isNonNull, depth + 1);
+    return getType(type.ofType, isList, isNonNull, isNonNullList, depth + 1);
   }
   return {
     graphQLType: type as GraphQLNamedType,
     isList,
     isNonNull,
+    isNonNullList,
   };
 }
 

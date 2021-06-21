@@ -52,7 +52,7 @@ input FilterInput {
   logined: Boolean
   no: Int
   date: DateTime!
-  nums: [Int!]
+  nums: [Int!]!
   score: Float!
   user: UserInput
 }
@@ -151,7 +151,7 @@ test("handler.getArgument", async () => {
   expect((filter.type as GraphQLInputObjectType).name).toEqual("FilterInput");
 });
 
-test("handler.getArgumentObjectFields", async () => {
+test("handler.getArgumentInputFields", async () => {
   const node = tree.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   // not exist argument
@@ -173,7 +173,7 @@ test("handler.getArgumentObjectFields", async () => {
   expect((fields.desc.type as GraphQLScalarType).name).toEqual("Boolean");
 });
 
-test("handler.getArgumentObjectField", async () => {
+test("handler.getArgumentInputField", async () => {
   const node = tree.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   // not exist argument
@@ -204,7 +204,7 @@ test("handler.getArgumentObjectField", async () => {
   expect(username.type instanceof GraphQLScalarType).toBeTruthy();
 });
 
-test("handler.validateValue", async () => {
+test("handler.validateInputValue", async () => {
   const node = tree.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   // limit
@@ -249,6 +249,7 @@ test("handler.convertArgumentValue", async () => {
   expect(limitValueInfo.value).toEqual(10);
   expect(limitValueInfo.type.graphQLType.name).toEqual("Int");
   expect(limitValueInfo.type.isNonNull).toEqual(true);
+  expect(limitValueInfo.type.isNonNullList).toEqual(false);
   expect(limitValueInfo.type.isList).toEqual(false);
   expect(handler.convertArgumentValue("limit", "3.14")!.value).toEqual(3);
   expect(handler.convertArgumentValue("limit", "true")!.value).toEqual(NaN);
@@ -258,6 +259,7 @@ test("handler.convertArgumentValue", async () => {
   expect(sortByInfo.value).toEqual("id");
   expect(sortByInfo.type.graphQLType.name).toEqual("Sortable");
   expect(sortByInfo.type.isNonNull).toEqual(false);
+  expect(sortByInfo.type.isNonNullList).toEqual(false);
   expect(sortByInfo.type.isList).toEqual(false);
   expect(handler.convertArgumentValue("sort.by", "createdAt")!.value).toEqual(
     "createdAt"
@@ -270,6 +272,7 @@ test("handler.convertArgumentValue", async () => {
   expect(sortDescInfo.value).toEqual(true);
   expect(sortDescInfo.type.graphQLType.name).toEqual("Boolean");
   expect(sortDescInfo.type.isNonNull).toEqual(false);
+  expect(sortDescInfo.type.isNonNullList).toEqual(false);
   expect(sortDescInfo.type.isList).toEqual(false);
   expect(handler.convertArgumentValue("sort.desc", "false")!.value).toEqual(
     false
@@ -281,6 +284,7 @@ test("handler.convertArgumentValue", async () => {
   expect(filterNoInfo.value).toEqual(5);
   expect(filterNoInfo.type.graphQLType.name).toEqual("Int");
   expect(filterNoInfo.type.isNonNull).toEqual(false);
+  expect(filterNoInfo.type.isNonNullList).toEqual(false);
   expect(filterNoInfo.type.isList).toEqual(false);
   expect(handler.convertArgumentValue("filter.no", "test")!.value).toEqual(NaN);
   // filter.nums
@@ -288,6 +292,7 @@ test("handler.convertArgumentValue", async () => {
   expect(filterNums.value).toEqual([3]);
   expect(filterNums.type.graphQLType.name).toEqual("Int");
   expect(filterNums.type.isNonNull).toEqual(true);
+  expect(filterNums.type.isNonNullList).toEqual(true);
   expect(filterNums.type.isList).toEqual(true);
   expect(
     handler.convertArgumentValue("filter.nums", "3, 11, -5")!.value
@@ -303,6 +308,7 @@ test("handler.convertArgumentValue", async () => {
   expect(filterScoreInfo.value).toEqual(3);
   expect(filterScoreInfo.type.graphQLType.name).toEqual("Float");
   expect(filterScoreInfo.type.isNonNull).toEqual(true);
+  expect(filterScoreInfo.type.isNonNullList).toEqual(false);
   expect(filterScoreInfo.type.isList).toEqual(false);
   expect(handler.convertArgumentValue("filter.score", "3.14")!.value).toEqual(
     3.14
@@ -318,6 +324,7 @@ test("handler.convertArgumentValue", async () => {
   expect(filterIdInfo.value).toEqual("test");
   expect(filterIdInfo.type.graphQLType.name).toEqual("ID");
   expect(filterIdInfo.type.isNonNull).toEqual(false);
+  expect(filterIdInfo.type.isNonNullList).toEqual(false);
   expect(filterIdInfo.type.isList).toEqual(false);
   expect(handler.convertArgumentValue("filter.id", "3.14")!.value).toEqual(
     "3.14"
@@ -330,6 +337,7 @@ test("handler.convertArgumentValue", async () => {
   expect(filterUserIdInfo.value).toEqual("test");
   expect(filterUserIdInfo.type.graphQLType.name).toEqual("ID");
   expect(filterUserIdInfo.type.isNonNull).toEqual(true);
+  expect(filterUserIdInfo.type.isNonNullList).toEqual(false);
   expect(filterUserIdInfo.type.isList).toEqual(false);
   expect(handler.convertArgumentValue("filter.userId", "555")!.value).toEqual(
     "555"
@@ -339,6 +347,7 @@ test("handler.convertArgumentValue", async () => {
   expect(filterIdsInfo.value).toEqual(["test"]);
   expect(filterIdsInfo.type.graphQLType.name).toEqual("ID");
   expect(filterIdsInfo.type.isNonNull).toEqual(true);
+  expect(filterIdsInfo.type.isNonNullList).toEqual(false);
   expect(filterIdsInfo.type.isList).toEqual(true);
   expect(handler.convertArgumentValue("filter.ids", "id1, id2")!.value).toEqual(
     ["id1", "id2"]
@@ -354,6 +363,7 @@ test("handler.convertArgumentValue", async () => {
   expect(filterDateInfo.value).toEqual("2021-06-21T02:14:43Z");
   expect(filterDateInfo.type.graphQLType.name).toEqual("DateTime");
   expect(filterDateInfo.type.isNonNull).toEqual(true);
+  expect(filterDateInfo.type.isNonNullList).toEqual(false);
   expect(filterDateInfo.type.isList).toEqual(false);
   // filter.user.username
   const filterUserUsernameInfo = handler.convertArgumentValue(
@@ -363,6 +373,7 @@ test("handler.convertArgumentValue", async () => {
   expect(filterUserUsernameInfo.value).toEqual("test");
   expect(filterUserUsernameInfo.type.graphQLType.name).toEqual("String");
   expect(filterUserUsernameInfo.type.isNonNull).toEqual(false);
+  expect(filterUserUsernameInfo.type.isNonNullList).toEqual(false);
   expect(filterUserUsernameInfo.type.isList).toEqual(false);
 });
 

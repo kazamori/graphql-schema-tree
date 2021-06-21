@@ -1,85 +1,23 @@
 import {
-  buildSchema,
   GraphQLEnumType,
   GraphQLInputObjectType,
   GraphQLNonNull,
   GraphQLScalarType,
   GraphQLSchema,
 } from "graphql";
+import path from "path";
 import { GraphQLSchemaTree } from "../src/graphqlSchemaTree";
 import { SchemaNodeHandler } from "../src/handler";
+import { getSchema } from "../src/util";
 
-const testSchema = `
-scalar DateTime
-
-type User {
-  id: ID!
-  username: String!
-  logined: Boolean
-  score: Float
-  company: Company!
-  createdAt: DateTime!
-}
-
-type Company {
-  id: ID!
-  name: String
-  users: [User!]!
-}
-
-type MyData {
-  id: ID!
-  name: String!
-  num: Int
-  createdAt: DateTime!
-  user: User!
-  companies: [Company!]
-}
-
-type Response {
-  total: Int!
-  data: [MyData!]!
-}
-
-input UserInput {
-  username: String
-}
-
-input FilterInput {
-  id: ID
-  userId: ID!
-  ids: [ID!]
-  logined: Boolean
-  no: Int
-  date: DateTime!
-  nums: [Int!]!
-  score: Float!
-  user: UserInput
-}
-
-input SortInput {
-  by: Sortable = id
-  desc: Boolean = false
-}
-
-enum Sortable {
-  id
-  name
-  createdAt
-}
-
-type Query {
-  myquery(limit: Int!, offset: Int, sort: SortInput filter: FilterInput): Response!
-}
-`;
-
-let schema: GraphQLSchema;
-let tree: GraphQLSchemaTree;
+const schema1Path = path.resolve(__dirname, "./schema1.graphql");
+let schema1: GraphQLSchema;
+let tree1: GraphQLSchemaTree;
 
 beforeAll((done) => {
   const before = async () => {
-    schema = buildSchema(testSchema, { assumeValid: true });
-    tree = new GraphQLSchemaTree(schema, {
+    schema1 = await getSchema({ pathOrEndpoint: schema1Path });
+    tree1 = new GraphQLSchemaTree(schema1, {
       typeName: "Query",
       maxDepth: 5,
     });
@@ -89,7 +27,7 @@ beforeAll((done) => {
 });
 
 test("handler.getNode", async () => {
-  const node = tree.getNode("query.myquery.data")!;
+  const node = tree1.getNode("query.myquery.data")!;
   const handler = new SchemaNodeHandler(node);
   const user = handler.getNode("data.user")!;
   expect(user).not.toBeNull();
@@ -98,7 +36,7 @@ test("handler.getNode", async () => {
 });
 
 test("handler.hasSameTypeInHierarchy", async () => {
-  const node = tree.getNodeAsRoot("query.myquery.data")!;
+  const node = tree1.getNodeAsRoot("query.myquery.data")!;
   const handler = new SchemaNodeHandler(node);
   const users = handler.getNode("data.user.company.users")!;
   expect(users.__info.path).toEqual("data.user.company.users");
@@ -119,21 +57,25 @@ test("handler.hasSameTypeInHierarchy", async () => {
 });
 
 test("handler.getArgumentNames", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   expect(handler.getArgumentNames()).toEqual([
     "limit",
     "offset",
     "sort",
     "filter",
+    "ids1",
+    "ids2",
+    "ids3",
+    "ids4",
   ]);
 });
 
 test("handler.getArguments", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   const args = handler.getArguments();
-  expect(args.length).toEqual(4);
+  expect(args.length).toEqual(8);
   expect(args[0].name).toEqual("limit");
   expect(
     (args[0].type as GraphQLNonNull<GraphQLScalarType>).ofType.name
@@ -143,7 +85,7 @@ test("handler.getArguments", async () => {
 });
 
 test("handler.getArgument", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   const filter = handler.getArgument("filter")!;
   expect(filter).not.toBeNull();
@@ -152,7 +94,7 @@ test("handler.getArgument", async () => {
 });
 
 test("handler.getArgumentInputFields", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   // not exist argument
   expect(handler.getArgumentInputFields("null")).toBeNull();
@@ -174,7 +116,7 @@ test("handler.getArgumentInputFields", async () => {
 });
 
 test("handler.getArgumentInputField", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   // not exist argument
   expect(handler.getArgumentInputField("null")).toBeNull();
@@ -205,7 +147,7 @@ test("handler.getArgumentInputField", async () => {
 });
 
 test("handler.validateInputValue", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   // limit
   const limit = handler.getArgumentInputField("limit")!;
@@ -226,7 +168,7 @@ test("handler.validateInputValue", async () => {
 });
 
 test("handler.validateArgument", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   // limit
   expect(handler.validateArgument("limit", 10)).toBeNull();
@@ -242,7 +184,7 @@ test("handler.validateArgument", async () => {
 });
 
 test("handler.convertArgumentValue", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   // limit
   const limitValueInfo = handler.convertArgumentValue("limit", "10")!;
@@ -383,39 +325,46 @@ test("handler.convertArgumentValue", async () => {
   expect(filterUserUsernameInfo.parentType!.graphQLType.name).toEqual(
     "UserInput"
   );
+  const ids4Info = handler.convertArgumentValue("ids4", "1, 2, 3")!;
+  expect(ids4Info.value).toEqual([1, 2, 3]);
+  expect(ids4Info.type.graphQLType.name).toEqual("Int");
+  expect(ids4Info.type.isNonNull).toEqual(true);
+  expect(ids4Info.type.isNonNullList).toEqual(true);
+  expect(ids4Info.type.isList).toEqual(true);
+  expect(ids4Info.parentType).toBeNull();
 });
 
 test("handler.getFieldNames", async () => {
-  const node1 = tree.getNodeAsRoot("query.myquery")!;
+  const node1 = tree1.getNodeAsRoot("query.myquery")!;
   const handler1 = new SchemaNodeHandler(node1);
   expect(handler1.getFieldNames()).toEqual(["total", "data"]);
-  const node2 = tree.getNodeAsRoot("query.myquery.data")!;
+  const node2 = tree1.getNodeAsRoot("query.myquery.data")!;
   const handler2 = new SchemaNodeHandler(node2);
   expect(handler2.getFieldNames()).toEqual([
     "id",
     "name",
     "num",
-    "createdAt",
-    "user",
     "companies",
+    "user",
+    "createdAt",
   ]);
 });
 
 test("handler.getFields", async () => {
-  const node = tree.getNodeAsRoot("query.myquery.data")!;
+  const node = tree1.getNodeAsRoot("query.myquery.data")!;
   const handler = new SchemaNodeHandler(node);
   const fields = handler.getFields();
   expect(fields.length).toEqual(6);
   expect(fields[0].__info.name).toEqual("id");
   expect(fields[1].__info.parentName).toEqual("data");
   expect(fields[2].__info.parentPath).toEqual("data");
-  expect(fields[3].__info.path).toEqual("data.createdAt");
+  expect(fields[3].__info.path).toEqual("data.companies");
   expect(fields[4].__info.depth).toEqual(1);
   expect(fields[5].__info.isMaxDepth).toEqual(false);
 });
 
 test("handler.isHiddenNode", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   const total = handler.getNode("myquery.total")!;
   const data = handler.getNode("myquery.data")!;
@@ -459,7 +408,7 @@ test("handler.isHiddenNode", async () => {
 });
 
 test("handler.traverseNode with all paths", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   const tracingNodes: string[] = [];
   handler.traverseNode(
@@ -475,18 +424,9 @@ test("handler.traverseNode with all paths", async () => {
     "myquery.data.id",
     "myquery.data.name",
     "myquery.data.num",
-    "myquery.data.createdAt",
-    "myquery.data.user",
     "myquery.data.companies",
-    "myquery.data.user.id",
-    "myquery.data.user.username",
-    "myquery.data.user.logined",
-    "myquery.data.user.score",
-    "myquery.data.user.company",
-    "myquery.data.user.createdAt",
-    "myquery.data.user.company.id",
-    "myquery.data.user.company.name",
-    "myquery.data.user.company.users",
+    "myquery.data.user",
+    "myquery.data.createdAt",
     "myquery.data.companies.id",
     "myquery.data.companies.name",
     "myquery.data.companies.users",
@@ -496,11 +436,20 @@ test("handler.traverseNode with all paths", async () => {
     "myquery.data.companies.users.score",
     "myquery.data.companies.users.company",
     "myquery.data.companies.users.createdAt",
+    "myquery.data.user.id",
+    "myquery.data.user.username",
+    "myquery.data.user.logined",
+    "myquery.data.user.score",
+    "myquery.data.user.company",
+    "myquery.data.user.createdAt",
+    "myquery.data.user.company.id",
+    "myquery.data.user.company.name",
+    "myquery.data.user.company.users",
   ]);
 });
 
 test("handler.traverseNode with hidden paths", async () => {
-  const node = tree.getNodeAsRoot("query.myquery")!;
+  const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);
   const tracingNodes: string[] = [];
   handler.traverseNode(
@@ -523,14 +472,14 @@ test("handler.traverseNode with hidden paths", async () => {
     "myquery.data",
     "myquery.data.name",
     "myquery.data.num",
-    "myquery.data.createdAt",
-    "myquery.data.user",
     "myquery.data.companies",
+    "myquery.data.user",
+    "myquery.data.createdAt",
+    "myquery.data.companies.id",
+    "myquery.data.companies.name",
     "myquery.data.user.id",
     "myquery.data.user.logined",
     "myquery.data.user.score",
     "myquery.data.user.createdAt",
-    "myquery.data.companies.id",
-    "myquery.data.companies.name",
   ]);
 });

@@ -1,0 +1,70 @@
+scalar DateTime
+
+type User {
+  id: ID!
+  username: String!
+  logined: Boolean
+  score: Float
+  company: Company!
+  createdAt: DateTime!
+}
+
+type Company {
+  id: ID!
+  name: String
+  users: [User!]!
+}
+
+type MyData {
+  id: ID!
+  name: String!
+  num: Int
+  companies: [Company!]
+  user: User!
+  createdAt: DateTime!
+}
+
+type Response {
+  total: Int!
+  data: [MyData!]!
+}
+
+input UserInput {
+  username: String
+}
+
+input FilterInput {
+  id: ID
+  userId: ID!
+  ids: [ID!]
+  logined: Boolean
+  no: Int
+  date: DateTime!
+  nums: [Int!]!
+  score: Float!
+  user: UserInput
+}
+
+input SortInput {
+  by: Sortable = id
+  desc: Boolean = false
+}
+
+enum Sortable {
+  id
+  name
+  createdAt
+}
+
+type Query {
+  myquery(
+    limit: Int!
+    offset: Int
+    sort: SortInput
+    filter: FilterInput
+    ids1: [Int]
+    ids2: [Int!]
+    ids3: [Int]!
+    ids4: [Int!]!
+  ): Response!
+}

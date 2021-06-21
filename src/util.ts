@@ -56,36 +56,3 @@ export async function getSchema(option: SchemaOption): Promise<GraphQLSchema> {
   const contents = fs.readFileSync(path, { encoding, flag: "r" });
   return buildSchema(contents, { assumeValid: true });
 }
-
-export type FieldType = (string | { [key: string]: FieldType })[];
-
-export function convertDotNotationToFieldType(
-  dotNotationProperties: string[]
-): FieldType {
-  const extract = (fieldType: FieldType, tokens: string[]): void => {
-    const [key, ...others] = tokens;
-    if (tokens.length === 1) {
-      fieldType.push(key);
-    } else {
-      let found = false;
-      for (const item of fieldType) {
-        if (typeof item === "object") {
-          if (item[key] !== undefined) {
-            found = true;
-            extract(item[key], others);
-          }
-        }
-      }
-      if (!found) {
-        fieldType.push({ [key]: [] });
-        extract(fieldType, tokens);
-      }
-    }
-  };
-
-  const fieldType: FieldType = [];
-  for (const prop of dotNotationProperties) {
-    extract(fieldType, prop.split("."));
-  }
-  return fieldType;
-}

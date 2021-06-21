@@ -1,11 +1,14 @@
 import {
   GraphQLArgument,
+  GraphQLArgumentExtensions,
   GraphQLField,
+  GraphQLInputType,
   GraphQLNamedType,
   GraphQLType,
   isListType,
   isNonNullType,
 } from "graphql";
+import { Maybe } from "graphql/jsutils/Maybe";
 
 export type SchemaNodeInfo = {
   name: string;
@@ -28,14 +31,12 @@ export type TypeInfo = {
   graphQLType: GraphQLNamedType;
   isList: boolean;
   isNonNull: boolean;
-  isAppeared: boolean;
 };
 
 export function getType<T extends GraphQLType>(
   type: T & { readonly ofType: T },
   isList = false,
   isNonNull = false,
-  isAppeared = false,
   depth = 0
 ): TypeInfo {
   // FIXME: how to check list/nonnull for a wrapping type
@@ -48,28 +49,31 @@ export function getType<T extends GraphQLType>(
     isNonNull = isNonNullType(type);
   }
   if (type.ofType && depth < 8) {
-    return getType(type.ofType, isList, isNonNull, isAppeared, depth + 1);
+    return getType(type.ofType, isList, isNonNull, depth + 1);
   }
   return {
     graphQLType: type as GraphQLNamedType,
     isList,
     isNonNull,
-    isAppeared,
   };
 }
 
+// NOTE: almost the same as GraphQLArgument, delete astNode for deepcopy
 export type ArgumentInfo = {
   name: string;
-  type: TypeInfo;
+  description: Maybe<string>;
+  type: GraphQLInputType;
   defaultValue: any;
+  deprecationReason: Maybe<string>;
+  extensions: Maybe<Readonly<GraphQLArgumentExtensions>>;
 };
 
 function getArgument(arg: GraphQLArgument): ArgumentInfo {
-  return {
-    name: arg.name,
-    defaultValue: arg.defaultValue,
-    type: getType(arg.type),
+  const _arg = {
+    ...arg,
   };
+  delete _arg.astNode;
+  return _arg;
 }
 
 export function createSchemaNode(

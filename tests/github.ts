@@ -22,7 +22,7 @@ beforeAll((done) => {
   before();
 });
 
-test("get field names", async () => {
+test("github: get field names", async () => {
   const fieldNames = tree.getFieldNames();
   expect(fieldNames).toEqual([
     "codeOfConduct",
@@ -57,7 +57,7 @@ test("get field names", async () => {
   ]);
 });
 
-test("access properties in the hierarchy", async () => {
+test("github: access properties in the hierarchy", async () => {
   const user = tree.getNode("query.user", true) as any;
   expect(user).not.toBeNull();
   expect(user.__info).not.toBeNull();
@@ -71,14 +71,14 @@ test("access properties in the hierarchy", async () => {
   expect(user.unexistent).toBeUndefined();
 });
 
-test("get parent from a node", async () => {
+test("github: get parent from a node", async () => {
   const nodes = tree.getNode("query.user.followers.nodes")!;
   const parent = getParent(tree.tree, nodes)!;
   expect(parent.__info.name).toEqual("followers");
   expect(parent.__info.path).toEqual("query.user.followers");
 });
 
-test("get parent with prefix from a node", async () => {
+test("github: get parent with prefix from a node", async () => {
   const nodes = tree.getNodeAsRoot("query.user.followers.nodes")!;
   const noParent = getParent(tree.tree, nodes);
   expect(noParent).toBeNull();
@@ -87,7 +87,7 @@ test("get parent with prefix from a node", async () => {
   expect(parent.__info.path).toEqual("query.user.followers");
 });
 
-test("verify property details", async () => {
+test("github: verify property details", async () => {
   const nodes = tree.getNode("query.user.followers.nodes", true)!;
   const info = nodes.__info;
   expect(info.name).toEqual("nodes");
@@ -177,10 +177,9 @@ test("verify property details", async () => {
   expect(info.type.graphQLType).toEqual(schema.getType("User"));
   expect(info.type.isList).toEqual(true);
   expect(info.type.isNonNull).toEqual(false);
-  expect(info.type.isAppeared).toEqual(false);
 });
 
-test("get a node as root", async () => {
+test("github: get a node as root", async () => {
   const query = tree.getNode("query.user.followers")!;
   // normal path structure
   expect(query.__info.path).toEqual("query.user.followers");
@@ -216,7 +215,7 @@ test("get a node as root", async () => {
   expect((query as any).nodes.status.__info.depth).toEqual(4);
 });
 
-test("reach max depth", async () => {
+test("github: reach max depth", async () => {
   // depth is 3
   const nodes = tree.getNode("query.user.followers.nodes", true);
   Object.values(nodes!).map((value: any) => {
@@ -241,7 +240,7 @@ test("reach max depth", async () => {
   expect(organization).toBeNull();
 });
 
-test("get a node from a handler", async () => {
+test("github: get a node from a handler", async () => {
   const user = tree.getNodeAsRoot("query.user") as any;
   const handler = new SchemaNodeHandler(user);
   const nodes = handler.getNode("user.followers.nodes")!;
@@ -252,7 +251,7 @@ test("get a node from a handler", async () => {
   expect(followers.__info.path).toEqual("user.followers");
 });
 
-test("check a same type in the hierarchy", async () => {
+test("github: check a same type in the hierarchy", async () => {
   const user = tree.getNodeAsRoot("query.user") as any;
   const handler = new SchemaNodeHandler(user);
   const nodes = handler.getNode("user.followers.nodes")!;
@@ -271,76 +270,7 @@ test("check a same type in the hierarchy", async () => {
   ).toBeFalsy();
 });
 
-test("appear a same type with breadthFirst traversing", async () => {
-  const user = tree.getNode("query.user", true) as any;
-  const handler = new SchemaNodeHandler(user);
-
-  expect(
-    user.contributionsCollection.user.status.__info.type.isAppeared
-  ).toBeFalsy();
-  expect(user.status.__info.type.isAppeared).toBeFalsy();
-  expect(user.followers.nodes.status.__info.type.isAppeared).toBeFalsy();
-
-  handler.setIsAppeared("breadthFirst");
-
-  expect(
-    user.contributionsCollection.user.status.__info.type.isAppeared
-  ).toBeTruthy();
-  expect(user.status.__info.type.isAppeared).toBeFalsy();
-  expect(user.followers.nodes.status.__info.type.isAppeared).toBeTruthy();
-});
-
-test("appear a same type with depthFirst traversing", async () => {
-  const user = tree.getNode("query.user", true) as any;
-  const handler = new SchemaNodeHandler(user);
-
-  expect(
-    user.contributionsCollection.user.status.__info.type.isAppeared
-  ).toBeFalsy();
-  expect(user.status.__info.type.isAppeared).toBeFalsy();
-  expect(user.followers.nodes.status.__info.type.isAppeared).toBeFalsy();
-
-  handler.setIsAppeared("depthFirst");
-
-  expect(
-    user.contributionsCollection.user.status.__info.type.isAppeared
-  ).toBeFalsy();
-  expect(user.status.__info.type.isAppeared).toBeTruthy();
-  expect(user.followers.nodes.status.__info.type.isAppeared).toBeTruthy();
-});
-
-test("handle tree/node with call by reference", async () => {
-  const globalTree = tree;
-  const localTree = new GraphQLSchemaTree(schema, {
-    typeName: "Query",
-    maxDepth: 4,
-  });
-
-  expect(
-    (globalTree.tree.query as any).user.status.__info.type.isAppeared
-  ).toBeFalsy();
-  expect(
-    (localTree.tree.query as any).user.status.__info.type.isAppeared
-  ).toBeFalsy();
-
-  const user = localTree.getNode("query.user") as any;
-  const handler = new SchemaNodeHandler(user);
-
-  expect(user.status.__info.type.isAppeared).toBeFalsy();
-
-  handler.setIsAppeared("depthFirst");
-
-  expect(user.status.__info.type.isAppeared).toBeTruthy();
-
-  expect(
-    (globalTree.tree.query as any).user.status.__info.type.isAppeared
-  ).toBeFalsy();
-  expect(
-    (localTree.tree.query as any).user.status.__info.type.isAppeared
-  ).toBeTruthy();
-});
-
-test("traverse node", async () => {
+test("github: traverse node", async () => {
   const query = tree.getNode("query.user", true)!;
   const handler = new SchemaNodeHandler(query);
   const traces: string[] = [];
@@ -360,7 +290,7 @@ test("traverse node", async () => {
   );
 });
 
-test("traverse node as root", async () => {
+test("github: traverse node as root", async () => {
   const user = tree.getNodeAsRoot("query.user")!;
   const handler = new SchemaNodeHandler(user);
   const traces: string[] = [];
@@ -378,7 +308,7 @@ test("traverse node as root", async () => {
   expect(traces[1024]).toEqual("user.organization.team.viewerCanSubscribe");
 });
 
-test("traverse node excluding hidden paths", async () => {
+test("github: traverse node excluding hidden paths", async () => {
   const query = tree.getNode("query.user", true)!;
   const handler = new SchemaNodeHandler(query);
   const traces: string[] = [];
@@ -399,7 +329,7 @@ test("traverse node excluding hidden paths", async () => {
   }
 });
 
-test("traverse node excluding hidden regular expressions", async () => {
+test("github: traverse node excluding hidden regular expressions", async () => {
   const query = tree.getNode("query.user", true)!;
   const handler = new SchemaNodeHandler(query);
   const traces: string[] = [];
@@ -424,7 +354,7 @@ test("traverse node excluding hidden regular expressions", async () => {
   }
 });
 
-test("handle fields", async () => {
+test("github: handle fields", async () => {
   const user = tree.getNode("query.user", true) as any;
   const handler = new SchemaNodeHandler(user);
   const fields = handler.getFields();
@@ -434,7 +364,7 @@ test("handle fields", async () => {
   expect(fields[10].__info.name).toEqual(fieldNames[10]);
 });
 
-test("handle arguments", async () => {
+test("github: handle arguments", async () => {
   const user = tree.getNode("query.user", true) as any;
   const handler1 = new SchemaNodeHandler(user);
   const args = handler1.getArguments();
@@ -445,7 +375,7 @@ test("handle arguments", async () => {
   // case: 1
   // validation success
   expect(handler1.validateArgument("login", "t2y")).toBeNull();
-  expect(handler1.convertArgumentValue("login", "t2y")).toEqual("t2y");
+  expect(handler1.convertArgumentValue("login", "t2y")!.value).toEqual("t2y");
   // validation error
   expect(handler1.validateArgument("login", 333)).not.toBeNull();
   expect(handler1.validateArgument("login", true)).not.toBeNull();
@@ -457,11 +387,15 @@ test("handle arguments", async () => {
   // validation success
   expect(handler2.validateArgument("filterBy", {})).toBeNull();
   expect(handler2.validateArgument("filterBy", { labels: ["bug"] })).toBeNull();
-  const filterByValue = handler2.convertArgumentValue(
-    "filterBy",
-    '{ labels: ["bug"] }'
-  );
-  expect(filterByValue).toEqual({ labels: ["bug"], viewerSubscribed: false });
+  expect(handler2.validateArgument("filterBy.labels", "bug")).toBeNull();
+  const filterByLabelsInfo = handler2.convertArgumentValue(
+    "filterBy.labels",
+    "bug, refactoring"
+  )!;
+  expect(filterByLabelsInfo.value).toEqual(["bug", "refactoring"]);
+  expect(filterByLabelsInfo.type.graphQLType.name).toEqual("String");
+  expect(filterByLabelsInfo.type.isNonNull).toEqual(true);
+  expect(filterByLabelsInfo.type.isList).toEqual(true);
   // validation error
   expect(handler2.validateArgument("filterBy", "text")).not.toBeNull();
   expect(handler2.validateArgument("filterBy", 11)).not.toBeNull();
@@ -470,12 +404,13 @@ test("handle arguments", async () => {
   const repositories = tree.getNode("query.user.repositories", true) as any;
   const handler3 = new SchemaNodeHandler(repositories);
   // convert a value
-  expect(handler3.convertArgumentValue("isFork", "true")).toBeTruthy();
-  expect(handler3.convertArgumentValue("isLocked", "false")).toBeFalsy();
+  expect(handler3.convertArgumentValue("isFork", "true")!.value).toBeTruthy();
+  expect(handler3.convertArgumentValue("isLocked", "false")!.value).toBeFalsy();
 
   // case: 4
   const followers = tree.getNode("query.viewer.followers", true) as any;
   const handler4 = new SchemaNodeHandler(followers);
   // convert a value
-  expect(handler4.convertArgumentValue("first", "10")).toEqual(10);
+  expect(handler4.convertArgumentValue("first", "10")!.value).toEqual(10);
+  expect(handler4.convertArgumentValue("first", "test")!.value).toEqual(NaN);
 });

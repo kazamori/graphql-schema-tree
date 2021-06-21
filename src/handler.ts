@@ -1,15 +1,35 @@
 import {
   coerceInputValue,
+  GraphQLInputField,
+  GraphQLInputFieldMap,
   GraphQLInputObjectType,
   GraphQLInputType,
   GraphQLNamedType,
-  GraphQLObjectType,
-  parseValue,
-  valueFromAST,
+  GraphQLScalarType,
+  GraphQLString,
 } from "graphql";
 import selectn from "selectn";
-import { ArgumentInfo, SchemaNode, SchemaNodeInfo } from "./node";
+import {
+  ArgumentInfo,
+  getType,
+  SchemaNode,
+  SchemaNodeInfo,
+  TypeInfo,
+} from "./node";
 import { isInternalField, SchemaTree } from "./tree";
+
+export type ConvertArgumentValueOption = {
+  useTypeForID: GraphQLScalarType;
+};
+
+const defaultConvertArgumentValueOption: ConvertArgumentValueOption = {
+  useTypeForID: GraphQLString,
+};
+
+export type ArgumentValueInfo = {
+  value: any | null;
+  type: TypeInfo;
+};
 
 export type Traversing = "depthFirst" | "breadthFirst";
 
@@ -99,16 +119,43 @@ export class SchemaNodeHandler {
     return args.length === 1 ? args[0] : null;
   }
 
-  isArgumentObject(arg: ArgumentInfo) {
-    return arg.type.graphQLType instanceof GraphQLInputObjectType;
+  getArgumentInputFields(arg: string | ArgumentInfo) {
+    const _arg = typeof arg === "string" ? this.getArgument(arg) : arg;
+    if (_arg === null) {
+      return null;
+    }
+    if (!(_arg.type instanceof GraphQLInputObjectType)) {
+      return null;
+    }
+    return _arg.type.getFields();
   }
 
-  getArgumentObject(arg: ArgumentInfo) {
-    const type = arg.type.graphQLType as GraphQLInputObjectType;
-    return type.getFields();
+  getArgumentInputField(
+    name: string,
+    fieldMap?: GraphQLInputFieldMap
+  ): GraphQLInputField | null {
+    if (!name.includes(".")) {
+      return this.getArgument(name);
+    }
+
+    const [argName, ...subProperties] = name.split(".");
+    const fields =
+      fieldMap === undefined ? this.getArgumentInputFields(argName) : fieldMap;
+    if (fields === null) {
+      return null;
+    }
+    const subField = fields[subProperties[0]];
+    if (subField === undefined) {
+      return null;
+    }
+    if (subProperties.length === 1) {
+      return subField;
+    }
+    const subFields = (subField.type as GraphQLInputObjectType).getFields();
+    return this.getArgumentInputField(subProperties.join("."), subFields);
   }
 
-  validateValue(value: any, type: GraphQLInputType) {
+  validateInputValue(value: any, type: GraphQLInputType) {
     // if validation is successful, return null.
     // if not, return an error message.
     let message: string | null = null;
@@ -119,25 +166,64 @@ export class SchemaNodeHandler {
   }
 
   validateArgument(name: string, value: any) {
-    const arg = this.getArgument(name);
-    if (arg === null) {
+    const inputField = this.getArgumentInputField(name);
+    if (inputField === null) {
       return false;
     }
-    const type = arg.type.graphQLType as GraphQLInputType;
-    return this.validateValue(value, type);
+    return this.validateInputValue(value, inputField.type);
   }
 
-  convertArgumentValue(name: string, value: string) {
-    const arg = this.getArgument(name);
+  convertValue(value: string, type: GraphQLNamedType) {
+    let parseFunction: Function;
+    if (type.name === "String") {
+      return value;
+    } else if (type.name === "Int") {
+      parseFunction = parseInt;
+    } else if (type.name === "Float") {
+      parseFunction = parseFloat;
+    } else if (type.name === "Boolean") {
+      parseFunction = (value: string) => {
+        if (value === "true" || value === "false") {
+          return value === "true";
+        }
+        return null;
+      };
+    } else {
+      // handles string for custom scalar types or others
+      return value;
+    }
+    try {
+      return parseFunction(value);
+    } catch {
+      return null;
+    }
+  }
+
+  convertArgumentValue(
+    name: string,
+    value: string,
+    option = defaultConvertArgumentValueOption
+  ): ArgumentValueInfo | null {
+    const arg = this.getArgumentInputField(name);
     if (arg === null) {
       return null;
     }
-    const type = arg.type.graphQLType;
-    if (type.name === "String") {
-      return value;
+
+    const typeInfo = getType(arg.type);
+    const type = typeInfo.graphQLType as GraphQLScalarType;
+    if (typeInfo.isList) {
+      return {
+        value: value.split(",").map((v) => this.convertValue(v.trim(), type)),
+        type: typeInfo,
+      };
     }
-    const valueNode = parseValue(value, { noLocation: true });
-    return valueFromAST(valueNode, type as GraphQLInputType);
+
+    const scalarType =
+      typeInfo.graphQLType.name === "ID" ? option.useTypeForID : type;
+    return {
+      value: this.convertValue(value, scalarType),
+      type: typeInfo,
+    };
   }
 
   getFieldNames() {
@@ -146,22 +232,6 @@ export class SchemaNodeHandler {
 
   getFields() {
     return this.node.__info.children.map((key) => this.node[key] as SchemaNode);
-  }
-
-  setIsAppeared(traversing: Traversing) {
-    const appeared = new Map<string, boolean>();
-    traverse(this.node, traversing, (_, node) => {
-      const type = node.__info.type;
-      if (type.graphQLType instanceof GraphQLObjectType) {
-        const typeName = type.graphQLType.toString();
-        if (appeared.has(typeName)) {
-          type.isAppeared = true;
-        } else {
-          appeared.set(typeName, true);
-        }
-      }
-    });
-    return this;
   }
 
   isHiddenNode(node: SchemaNode, option: TraverseOption) {

@@ -8,6 +8,7 @@ import {
 import path from "path";
 import { GraphQLSchemaTree } from "../src/graphqlSchemaTree";
 import { SchemaNodeHandler } from "../src/handler";
+import { SchemaNode } from "../src/node";
 import { getSchema } from "../src/util";
 
 const schema1Path = path.resolve(__dirname, "./schema1.graphql");
@@ -481,5 +482,145 @@ test("handler.traverseNode with hidden paths", async () => {
     "myquery.data.user.logined",
     "myquery.data.user.score",
     "myquery.data.user.createdAt",
+  ]);
+});
+
+test("handler.traverseNode excluding root", async () => {
+  const node = tree1.getNodeAsRoot("query.myquery.data")!;
+  const handler = new SchemaNodeHandler(node);
+  const tracingNodes: SchemaNode[] = [];
+  handler.traverseNode(
+    (node) => {
+      tracingNodes.push(node);
+    },
+    { traversing: "breadthFirst", excludeRoot: true }
+  );
+  expect(
+    tracingNodes.map((node) => ({
+      path: node.__info.path,
+      parentPath: node.__info.parentPath,
+      depth: node.__info.depth,
+    }))
+  ).toEqual([
+    {
+      path: "id",
+      parentPath: "",
+      depth: 0,
+    },
+    {
+      path: "name",
+      parentPath: "",
+      depth: 0,
+    },
+    {
+      path: "num",
+      parentPath: "",
+      depth: 0,
+    },
+    {
+      path: "companies",
+      parentPath: "",
+      depth: 0,
+    },
+    {
+      path: "user",
+      parentPath: "",
+      depth: 0,
+    },
+    {
+      path: "createdAt",
+      parentPath: "",
+      depth: 0,
+    },
+    {
+      path: "companies.id",
+      parentPath: "companies",
+      depth: 1,
+    },
+    {
+      path: "companies.name",
+      parentPath: "companies",
+      depth: 1,
+    },
+    {
+      path: "companies.users",
+      parentPath: "companies",
+      depth: 1,
+    },
+    {
+      path: "companies.users.id",
+      parentPath: "companies.users",
+      depth: 2,
+    },
+    {
+      path: "companies.users.username",
+      parentPath: "companies.users",
+      depth: 2,
+    },
+    {
+      path: "companies.users.logined",
+      parentPath: "companies.users",
+      depth: 2,
+    },
+    {
+      path: "companies.users.score",
+      parentPath: "companies.users",
+      depth: 2,
+    },
+    {
+      path: "companies.users.company",
+      parentPath: "companies.users",
+      depth: 2,
+    },
+    {
+      path: "companies.users.createdAt",
+      parentPath: "companies.users",
+      depth: 2,
+    },
+    {
+      path: "user.id",
+      parentPath: "user",
+      depth: 1,
+    },
+    {
+      path: "user.username",
+      parentPath: "user",
+      depth: 1,
+    },
+    {
+      path: "user.logined",
+      parentPath: "user",
+      depth: 1,
+    },
+    {
+      path: "user.score",
+      parentPath: "user",
+      depth: 1,
+    },
+    {
+      path: "user.company",
+      parentPath: "user",
+      depth: 1,
+    },
+    {
+      path: "user.createdAt",
+      parentPath: "user",
+      depth: 1,
+    },
+    {
+      path: "user.company.id",
+      parentPath: "user.company",
+      depth: 2,
+    },
+    {
+      path: "user.company.name",
+      parentPath: "user.company",
+      depth: 2,
+    },
+    {
+      path: "user.company.users",
+      parentPath: "user.company",
+      depth: 2,
+    },
   ]);
 });

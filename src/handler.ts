@@ -37,11 +37,13 @@ export type Traversing = "depthFirst" | "breadthFirst";
 export type TraverseOption = {
   traversing: Traversing;
   hiddenPaths?: (string | RegExp)[];
+  excludeRoot?: boolean;
 };
 
 const defaultTraverseOption: TraverseOption = {
   traversing: "depthFirst",
   hiddenPaths: [],
+  excludeRoot: false,
 };
 
 export function traverse(
@@ -263,10 +265,18 @@ export class SchemaNodeHandler {
 
   traverseNode(callback: (node: SchemaNode) => void, _option?: TraverseOption) {
     const option = { ...defaultTraverseOption, ..._option };
-    if (!this.isHiddenNode(this.node, option)) {
+    if (!(option.excludeRoot || this.isHiddenNode(this.node, option))) {
       callback(this.node);
     }
+    const root = this.node.__info.name;
     traverse(this.node, option.traversing, (_, node) => {
+      if (option.excludeRoot) {
+        const rootPath = new RegExp(`${root}\\.?`);
+        const info = node.__info;
+        info.path = info.path.replace(rootPath, "");
+        info.parentPath = info.parentPath.replace(rootPath, "");
+        info.depth = info.depth - 1;
+      }
       if (!this.isHiddenNode(node, option)) {
         callback(node);
       }

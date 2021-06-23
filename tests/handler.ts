@@ -94,6 +94,22 @@ test("handler.getArgument", async () => {
   expect((filter.type as GraphQLInputObjectType).name).toEqual("FilterInput");
 });
 
+test("handler.getArgumentInputFieldMap", async () => {
+  const node = tree1.getNodeAsRoot("query.myquery")!;
+  const handler = new SchemaNodeHandler(node);
+  const fieldMap = handler.getArgumentInputFieldMap();
+  expect(fieldMap.size).toEqual(17);
+  expect(fieldMap.get("limit")?.type.toString()).toEqual("Int!");
+  expect(fieldMap.get("offset")?.type.toString()).toEqual("Int");
+  expect(fieldMap.get("sort.by")?.type.toString()).toEqual("Sortable");
+  expect(fieldMap.get("sort.desc")?.type.toString()).toEqual("Boolean");
+  expect(fieldMap.get("ids4")?.type.toString()).toEqual("[Int!]!");
+  expect(fieldMap.get("filter.date")?.type.toString()).toEqual("DateTime!");
+  expect(fieldMap.get("filter.user.username")?.type.toString()).toEqual(
+    "String"
+  );
+});
+
 test("handler.getArgumentInputFields", async () => {
   const node = tree1.getNodeAsRoot("query.myquery")!;
   const handler = new SchemaNodeHandler(node);

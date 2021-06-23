@@ -122,6 +122,27 @@ export class SchemaNodeHandler {
     return args.length === 1 ? args[0] : null;
   }
 
+  getArgumentInputFieldMap(): Map<string, GraphQLInputField> {
+    const search = (
+      name: string,
+      field: GraphQLInputField,
+      result: Map<string, GraphQLInputField>
+    ) => {
+      if (field.type instanceof GraphQLInputObjectType) {
+        Object.values(field.type.getFields()).forEach((subField) => {
+          search(`${name}.${subField.name}`, subField, result);
+        });
+      } else {
+        result.set(name, field);
+      }
+    };
+    const fieldMap = new Map<string, GraphQLInputField>();
+    this.getArgumentNames().forEach((name) => {
+      search(name, this.getArgumentInputField(name)!, fieldMap);
+    });
+    return fieldMap;
+  }
+
   getArgumentInputFields(arg: string | ArgumentInfo) {
     const _arg = typeof arg === "string" ? this.getArgument(arg) : arg;
     if (_arg === null) {

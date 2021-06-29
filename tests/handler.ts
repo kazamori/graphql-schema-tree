@@ -36,7 +36,7 @@ test("handler.getNode", async () => {
   expect(user.__info.path).toEqual("query.myquery.data.user");
 });
 
-test("handler.hasSameTypeInHierarchy", async () => {
+test("handler.hasSameTypeInHierarchy under data", async () => {
   const node = tree1.getNodeAsRoot("query.myquery.data")!;
   const handler = new SchemaNodeHandler(node);
   const users = handler.getNode("data.user.company.users")!;
@@ -49,6 +49,27 @@ test("handler.hasSameTypeInHierarchy", async () => {
   ).toBeTruthy();
   const company = handler.getNode("data.user.company")!;
   expect(company.__info.path).toEqual("data.user.company");
+  expect(
+    handler.hasSameTypeInHierarchy(
+      company.__info.type.graphQLType,
+      company.__info.parentPath
+    )
+  ).toBeFalsy();
+});
+
+test("handler.hasSameTypeInHierarchy under user", async () => {
+  const node = tree1.getNodeAsRoot("query.myquery.data.user")!;
+  const handler = new SchemaNodeHandler(node);
+  const users = handler.getNode("user.company.users")!;
+  expect(users.__info.path).toEqual("user.company.users");
+  expect(
+    handler.hasSameTypeInHierarchy(
+      users.__info.type.graphQLType,
+      users.__info.parentPath
+    )
+  ).toBeTruthy();
+  const company = handler.getNode("user.company")!;
+  expect(company.__info.path).toEqual("user.company");
   expect(
     handler.hasSameTypeInHierarchy(
       company.__info.type.graphQLType,

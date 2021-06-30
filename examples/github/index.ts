@@ -24,19 +24,7 @@ export async function main() {
   // show a node info
   console.log("=== query.user info:\n", JSON.stringify(user.__info, null, 2));
 
-  // set a flag when a same type is appeared in the herarchy
-  console.log(
-    "=== before calling handler.setIsAppeared\n",
-    JSON.stringify((user as any).followers.nodes.__info.type, null, 2)
-  );
-
   const handler = new SchemaNodeHandler(user);
-  handler.setIsAppeared("breadthFirst");
-
-  console.log(
-    "=== after calling handler.setIsAppeared\n",
-    JSON.stringify((user as any).followers.nodes.__info.type, null, 2)
-  );
 
   // get fields
   const fields = handler.getFields();
